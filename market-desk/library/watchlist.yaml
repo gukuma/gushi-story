@@ -1,0 +1,35 @@
+# Market Desk watchlist — read by the briefs and the dashboard.
+# Edit freely. Format: one item per line, "- <code> <name> | <why you watch it>".
+# A-share codes: 6 digits (sh/sz routed automatically). HK: hk00700. Indices: sh000300.
+# These starter names are placeholders across sectors; replace them with your own.
+
+a_shares:
+  - 600519 贵州茅台 | consumption bellwether, dividend/valuation anchor
+  - 300750 宁德时代 | EV batteries, export exposure
+  - 601318 中国平安 | insurers as proxy for rates and property
+  - 688981 中芯国际 | domestic semis, STAR sentiment
+  - 002594 比亚迪 | EV price war, overseas growth
+  - 600900 长江电力 | defensive yield
+
+hong_kong:
+  - hk00700 腾讯控股 | platform / buyback bellwether
+  - hk09988 阿里巴巴 | China consumer + cloud
+
+indices:
+  - sh000001 上证指数 | headline
+  - sh000300 沪深300 | large caps
+  - sz399006 创业板指 | growth
+  - sh000688 科创50 | tech
+  - hkHSTECH 恒生科技 | offshore China tech
+
+macro:
+  - USD/CNH | PBOC tolerance, fixing vs spot
+  - CN10Y | easing expectations
+  - US10Y | global discount rate
+  - DXY | dollar cycle
+  - Gold | central bank buying, real rates
+  - Brent | inflation / China demand
+
+crypto:
+  - bitcoin | risk appetite, ETF flows
+  - ethereum | on-chain activity
