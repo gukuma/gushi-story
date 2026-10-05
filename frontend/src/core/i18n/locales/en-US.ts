@@ -1202,7 +1202,7 @@ export const enUS: Translations = {
 
   // Page titles (document title)
   pages: {
-    appName: "DeerFlow",
+    appName: "📈 股市故事",
     chats: "Chats",
     newChat: "New chat",
     untitled: "Untitled",

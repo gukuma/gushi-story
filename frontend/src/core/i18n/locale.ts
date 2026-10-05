@@ -1,6 +1,6 @@
 export const SUPPORTED_LOCALES = ["en-US", "zh-CN"] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
-export const DEFAULT_LOCALE: Locale = "en-US";
+export const DEFAULT_LOCALE: Locale = "zh-CN"; // 股市故事: Mandarin by default
 
 export function isLocale(value: string): value is Locale {
   return (SUPPORTED_LOCALES as readonly string[]).includes(value);
@@ -24,7 +24,13 @@ export function getLangByLocale(locale: Locale): string {
   return locale;
 }
 
-export function normalizeLocale(locale: string | null | undefined): Locale {
+export function normalizeLocale(_locale?: string | null): Locale {
+  return "zh-CN"; // 股市故事: always Mandarin
+}
+
+export function normalizeLocaleOriginal(
+  locale: string | null | undefined,
+): Locale {
   if (!locale) {
     return DEFAULT_LOCALE;
   }

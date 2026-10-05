@@ -5,6 +5,9 @@
 #   dashboard   open the reading room on http://127.0.0.1:2027
 #   data        check the market data providers
 #   brief       print a live cross-asset snapshot in the terminal
+#   account     create your DeerFlow login (first time) or check that your login works
+#   reset-password   forgot the DeerFlow password? set a new one from the terminal
+#   ui          apply the 📈 股市故事 web UI (ui --revert restores DeerFlow's original UI)
 #   lang        show / switch desk language: lang en | zh | both  (agents, skills, schedules, dashboard)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -19,5 +22,8 @@ case "${1:-help}" in
   data)      $PY "$DATA" doctor ;;
   brief)     $PY "$DATA" snapshot "${@:2}" ;;
   lang)      $PY "$ROOT/market-desk/setup/lang.py" "${@:2}" ;;
-  *) sed -n '2,9p' "$0" ;;
+  ui)        $PY "$ROOT/market-desk/ui/apply_ui.py" "${@:2}" ;;
+  account)   $PY "$ROOT/market-desk/setup/seed.py" --account-only ;;
+  reset-password) (cd "$ROOT/backend" && PYTHONPATH=. uv run --no-sync python "$ROOT/market-desk/setup/reset_password.py") ;;
+  *) sed -n '2,12p' "$0" ;;
 esac

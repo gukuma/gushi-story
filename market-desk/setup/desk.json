@@ -35,36 +35,118 @@
     },
     {
       "name": "market-analyst-zh",
-      "display_name": "市场分析师",
+      "display_name": "首席分析师",
       "lang": "zh",
-      "description": "A股、港股、中国宏观、汇率与加密资产。用中文撰写每日简报、周度复盘和个股研究，实时取数并记录可打分的预测。",
+      "soul_file": "agents/market-analyst-zh.md",
+      "description": "默认助手。A股、港股、宏观、汇率与加密资产；写每日简报，回答问题，需要时按研究团队流程调用个股、财报、对比、行业、日历、审稿等技能。",
       "skills": [
         "market-data",
-        "daily-market-brief-zh",
-        "weekly-macro-review-zh",
-        "ashare-equity-research-zh",
+        "research-standard-zh",
         "chinese-sources-first",
         "deep-research",
         "chart-visualization",
-        "data-analysis"
-      ],
-      "soul_file": "agents/market-analyst-zh.md"
+        "data-analysis",
+        "daily-market-brief-zh",
+        "ashare-equity-research-zh",
+        "earnings-review-zh",
+        "peer-compare-zh",
+        "market-sizing-zh",
+        "weekly-macro-review-zh",
+        "announcement-watch-zh",
+        "catalyst-calendar-zh",
+        "thesis-tracker-zh",
+        "report-review-zh"
+      ]
+    },
+    {
+      "name": "stock-researcher-zh",
+      "display_name": "个股研究员",
+      "lang": "zh",
+      "soul_file": "agents/stock-researcher-zh.md",
+      "description": "单只 A股 / 港股的深度研究：数据底稿、四个分析视角、多空对辩、情景估值；财报点评与前瞻；维护每只股票的投资逻辑文件。",
+      "skills": [
+        "market-data",
+        "research-standard-zh",
+        "chinese-sources-first",
+        "deep-research",
+        "chart-visualization",
+        "data-analysis",
+        "ashare-equity-research-zh",
+        "earnings-review-zh",
+        "thesis-tracker-zh",
+        "peer-compare-zh"
+      ]
     },
     {
       "name": "research-analyst-zh",
       "display_name": "行业研究员",
       "lang": "zh",
-      "description": "市场规模测算、竞争格局与行业研究，中文来源优先，每个数字标注置信度。",
+      "soul_file": "agents/research-analyst-zh.md",
+      "description": "行业与主题研究：市场规模两种测算、产业链与上市公司、竞争格局、同行对比排序；每个数字有公式、来源和置信度。",
       "skills": [
-        "market-sizing-zh",
+        "market-data",
+        "research-standard-zh",
         "chinese-sources-first",
         "deep-research",
-        "consulting-analysis",
-        "market-data",
         "chart-visualization",
-        "data-analysis"
-      ],
-      "soul_file": "agents/research-analyst-zh.md"
+        "data-analysis",
+        "market-sizing-zh",
+        "peer-compare-zh",
+        "consulting-analysis"
+      ]
+    },
+    {
+      "name": "macro-strategist-zh",
+      "display_name": "宏观策略师",
+      "lang": "zh",
+      "soul_file": "agents/macro-strategist-zh.md",
+      "description": "中国宏观与政策、央行、人民币、利率、大宗与加密资产；每周复盘并提出预测验证结果；宏观与政策日历。",
+      "skills": [
+        "market-data",
+        "research-standard-zh",
+        "chinese-sources-first",
+        "deep-research",
+        "chart-visualization",
+        "data-analysis",
+        "weekly-macro-review-zh",
+        "catalyst-calendar-zh",
+        "daily-market-brief-zh"
+      ]
+    },
+    {
+      "name": "announcement-watcher-zh",
+      "display_name": "事件监控员",
+      "lang": "zh",
+      "soul_file": "agents/announcement-watcher-zh.md",
+      "description": "自选股公告、财报日、解禁、分红、政策会议：每日公告速览、每周催化剂日历、临近财报的前瞻。",
+      "skills": [
+        "market-data",
+        "research-standard-zh",
+        "chinese-sources-first",
+        "deep-research",
+        "chart-visualization",
+        "data-analysis",
+        "announcement-watch-zh",
+        "catalyst-calendar-zh",
+        "earnings-review-zh"
+      ]
+    },
+    {
+      "name": "risk-reviewer-zh",
+      "display_name": "风控审稿人",
+      "lang": "zh",
+      "soul_file": "agents/risk-reviewer-zh.md",
+      "description": "红队审稿：按研报规范检查数字出处、前后一致、假设、情景与反方观点，评分并列出必须修改的问题；为到期预测提出验证结果。",
+      "skills": [
+        "market-data",
+        "research-standard-zh",
+        "chinese-sources-first",
+        "deep-research",
+        "chart-visualization",
+        "data-analysis",
+        "report-review-zh",
+        "thesis-tracker-zh"
+      ]
     }
   ],
   "timezone": "Asia/Shanghai",
@@ -102,29 +184,57 @@
       "assistant_id": "market-analyst-zh",
       "cron": "45 8 * * 1-5",
       "lang": "zh",
-      "prompt": "使用 daily-market-brief-zh 技能，盘前模式。先检查A股今天是否开市；休市则写休市简报。保存到研究库，最后回复一句话摘要和文件路径。全部使用简体中文。"
+      "prompt": "使用 daily-market-brief-zh 技能，盘前模式。先检查A股今天是否开市；休市则写休市简报。保存到研究库，最后回复一句话摘要和文件路径。全部使用简体中文，按 research-standard-zh 规范写作并自检。"
     },
     {
       "title": "收盘复盘（A股）",
       "assistant_id": "market-analyst-zh",
       "cron": "45 15 * * 1-5",
       "lang": "zh",
-      "prompt": "使用 daily-market-brief-zh 技能，为今天的A股交易写收盘复盘。先检查今天是否开市；若休市，只回复“今日休市”（盘前任务已写休市简报）。在预测记录中写入 1–3 条预测（--lang zh），保存到研究库，最后回复一句话摘要和文件路径。全部使用简体中文。"
+      "prompt": "使用 daily-market-brief-zh 技能，为今天的A股交易写收盘复盘。先检查今天是否开市；若休市，只回复“今日休市”。记录 1–3 条预测（--lang zh），保存到研究库，最后回复一句话摘要和文件路径。全部使用简体中文，按 research-standard-zh 规范写作并自检。"
+    },
+    {
+      "title": "每日公告扫描",
+      "assistant_id": "announcement-watcher-zh",
+      "cron": "30 18 * * 1-5",
+      "lang": "zh",
+      "prompt": "使用 announcement-watch-zh 技能，扫描自选股今天发布的公告，按重要性分级，保存公告速览到研究库。若有影响投资逻辑的公告，用 thesis-tracker-zh 更新对应文件。若今天A股休市，只回复“今日休市，无公告扫描”。最后回复一句话摘要和文件路径。全部使用简体中文，按 research-standard-zh 规范写作并自检。"
+    },
+    {
+      "title": "催化剂日历",
+      "assistant_id": "announcement-watcher-zh",
+      "cron": "30 7 * * 1",
+      "lang": "zh",
+      "prompt": "使用 catalyst-calendar-zh 技能，更新 /mnt/library/calendar.md（未来 60 天），并写本周催化剂日历研报：自选股财报日、解禁、分红、宏观数据与政策会议。若 5 个交易日内有自选股财报，用 earnings-review-zh 写前瞻。最后回复本周最重要的三件事和文件路径。全部使用简体中文，按 research-standard-zh 规范写作并自检。"
     },
     {
       "title": "宏观、汇率与加密资产周报",
-      "assistant_id": "market-analyst-zh",
+      "assistant_id": "macro-strategist-zh",
       "cron": "30 10 * * 6",
       "lang": "zh",
-      "prompt": "使用 weekly-macro-review-zh 技能复盘刚结束的一周。先验证到期的预测并打分，再写周报、记录新预测（--lang zh）、保存到研究库。最后回复摘要、累计 Brier 分数和文件路径。全部使用简体中文。"
+      "prompt": "使用 weekly-macro-review-zh 技能复盘刚结束的一周。先用 ledger.py due 列出到期预测，逐条取数后用 propose 提出结果和证据（不要 resolve），再写周报、记录新预测（--lang zh）、保存到研究库。最后回复摘要、累计 Brier 分数和文件路径。全部使用简体中文，按 research-standard-zh 规范写作并自检。"
+    },
+    {
+      "title": "投资逻辑周检",
+      "assistant_id": "stock-researcher-zh",
+      "cron": "0 20 * * 3",
+      "lang": "zh",
+      "prompt": "使用 thesis-tracker-zh 技能的“周检”：对 /mnt/library/watchlist.yaml 中每只 A股 / 港股，读取或创建 /mnt/library/theses/<代码>.md，根据本周新研报、公告和行情更新支柱状态与变更记录，然后写一份投资逻辑周检汇总研报。最后回复状态有变化的股票和文件路径。全部使用简体中文，按 research-standard-zh 规范写作并自检。"
     },
     {
       "title": "自选股深度研究",
-      "assistant_id": "market-analyst-zh",
+      "assistant_id": "stock-researcher-zh",
       "cron": "30 20 * * 0",
       "lang": "zh",
-      "prompt": "读取 /mnt/library/watchlist.yaml，并列出 /mnt/library/reports/ 下已有的中文研究笔记（文件名以 -research-zh.md 结尾）。在自选的A股或港股中，挑选最近一篇中文研究笔记最旧（或还没有）的标的，用 ashare-equity-research-zh 技能写一份完整笔记，记录预测（--lang zh），保存到研究库，最后回复核心观点和文件路径。全部使用简体中文。"
+      "prompt": "读取 /mnt/library/watchlist.yaml，列出 /mnt/library/reports/ 下已有的个股深度研报（type: equity-research）。挑选最近一份深度研报最旧（或还没有）的自选股，用 ashare-equity-research-zh 技能按完整流程（数据底稿、四个视角、多空对辩、情景、自检）写一份个股深度，记录预测，并更新投资逻辑文件。最后回复核心观点和文件路径。全部使用简体中文，按 research-standard-zh 规范写作并自检。"
+    },
+    {
+      "title": "周度审稿",
+      "assistant_id": "risk-reviewer-zh",
+      "cron": "30 21 * * 0",
+      "lang": "zh",
+      "prompt": "使用 report-review-zh 技能的“每周审稿”：快速审本周新增的全部研报，对问题最多的 1–2 份做完整审稿；对到期预测取数后用 propose 提出结果（不要 resolve）。保存周度审稿报告，最后回复最需要修改的研报和文件路径。全部使用简体中文，按 research-standard-zh 规范写作并自检。"
     }
   ],
-  "language_note": "Active language is set in market-desk/settings.json (en | zh | both). seed.py creates/resumes tasks for the active language(s) and pauses the others. Agents for both languages are always created."
+  "language_note": "默认中文（market-desk/settings.json: zh）。seed.py 为当前语言创建/恢复定时任务，暂停另一种语言的任务；两种语言的智能体都会创建。中文团队：首席分析师（默认）、个股研究员、行业研究员、宏观策略师、事件监控员、风控审稿人。"
 }

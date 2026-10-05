@@ -1,4 +1,44 @@
-# Market Desk for DeerFlow
+# 📈 股市故事 — Market Desk for DeerFlow
+
+## 最快开始 / Quick start
+
+```bash
+cd ~/Desktop/deer-flow
+bash market-desk/start-here.sh      # 一键：安装、配置、中文界面、开机自启动、智能体与定时任务
+```
+
+每一步都会检查是否已完成，随时可以重新运行。完成后 Safari 会打开 http://localhost:2026 。
+
+### 网页界面（📈 股市故事）
+
+`market-desk/ui/apply_ui.py` 把 DeerFlow 的网页改成中文投研台（DeerFlow 每次启动时会自动重新应用，
+DeerFlow 更新后也会保持）。撤销：`bash market-desk/desk.sh ui --revert`。
+
+| 页面 | 内容 |
+|---|---|
+| 首页 `/workspace` | 问候 + 提问框（自动打开市场分析师新对话并填好问题）、上证/我的股票/研报/预测准确度四块数据、每只股票一张实时卡片（涨跌幅、30 天走势、现价、市盈率、研报和对话数量，交易时段每 15 秒刷新）、市场行情列表、最近动态时间线 |
+| 研报中心 `/workspace/reports` | 每只股票一个文件夹（一份研报涉及几只股票就出现在几个文件夹里），另有 每日简报 / 公告速览 / 周报 / 行业研究 / 多标的研究 分类；按月份排列；阅读器；“预测记录”页显示命中率、Brier 分数和校准 |
+| API 密钥 `/workspace/keys` | 填写/替换密钥、切换搜索服务、“保存并重启” |
+| 侧边栏 | 首页、研报中心、定时任务、全部对话、API 密钥；“按股票查看对话”（一次对话提到几只股票就在几个组里，+N 表示还提到几只）；“教程模式”——打开后鼠标放到任何东西上都有最简单的中文说明 |
+
+Data comes from the local data service `market-desk/dashboard/server.py` (port 2027, started
+automatically, proxied at `/desk`). The old standalone page on :2027 still works but is no longer the entry point.
+
+### 默认智能体与定时任务（中文）
+
+| 智能体 | 做什么 | 定时任务 |
+|---|---|---|
+| 市场分析师 `market-analyst-zh` | 每日简报、日常提问（新对话默认用它） | 盘前简报 工作日 08:45 · 收盘复盘 15:45 |
+| 个股研究员 `stock-researcher-zh` | 单只股票深度研报 | 自选股深度研究 周日 20:30 |
+| 宏观策略师 `macro-strategist-zh` | 宏观、汇率、加密资产周报与预测打分 | 周报 周六 10:30 |
+| 公告监控员 `announcement-watcher-zh` | 自选股公告速览 | 每日公告扫描 工作日 18:30 |
+| 行业研究员 `research-analyst-zh` | 市场规模、竞争格局 | — |
+
+The definitions live in `market-desk/setup/desk.json` (+ `setup/agents/*.md`); `bash market-desk/desk.sh seed --update` re-applies them.
+
+---
+
+# Market Desk for DeerFlow (details)
 
 A research desk on top of DeerFlow for China A-shares, macro, FX and crypto: live market data,
 six house skills, two custom agents, four scheduled reports, a call ledger that scores forecasts,
@@ -54,8 +94,9 @@ bash market-desk/desk.sh configure          # shows a diff; backs up config.yaml
 # 3. Check the data feeds (no keys needed)
 bash market-desk/desk.sh data
 
-# 4. Start DeerFlow and create your account at http://localhost:2026
+# 4. Start DeerFlow, then (in a second Terminal tab) create your login
 make dev
+bash market-desk/desk.sh account            # or open http://localhost:2026 and use the setup page
 
 # 5. Create the agents and schedules (logs in with your DeerFlow email/password)
 bash market-desk/desk.sh seed               # add --paused to create schedules paused
@@ -71,6 +112,20 @@ desk keys                                   # add search keys (Tavily etc.), see
 Then in DeerFlow: **Scheduled tasks → Pre-market brief → Trigger now** to test one end to end.
 The report shows up in the dashboard within a minute.
 
+## Your DeerFlow login
+
+DeerFlow needs one account (it becomes the admin). Create it either way:
+
+- **Terminal:** `bash market-desk/desk.sh account` — asks for an email and password and creates the account
+  (only works while no account exists; afterwards it just checks your login).
+- **Browser:** open http://localhost:2026 — the first visit shows a setup page.
+
+`desk.sh seed` and `desk.sh lang` also offer to create the account if none exists yet.
+
+**Forgot your DeerFlow password:** `bash market-desk/desk.sh reset-password` lists the accounts in the local
+database and sets a new password (signs out existing sessions). Then `desk restart` if DeerFlow was running.
+To see which email the account uses: `sqlite3 backend/.deer-flow/data/deerflow.db 'select email from users;'`
+
 ## Mac: autostart, desktop shortcuts, everyday tools
 
 One-time install (from Terminal, inside the repo):
@@ -85,7 +140,7 @@ It creates:
 |---|---|
 | **Market Desk** (Desktop + ~/Applications) | Double-click: starts DeerFlow and the dashboard if they're not running, opens both in the browser |
 | **Market Desk Tools** (Desktop + ~/Applications) | Menu: status, edit a skill, new skill, check skills, watchlist, research library, config, API keys, switch search provider, restart, stop, logs, backup |
-| **Market Desk Autostart** (login item) | Starts everything in the background ~20 s after you log in, no windows |
+| **股市故事 自动启动** (login item) | ~15 s after login opens Terminal running `startup.command` (= `make dev`), then Safari opens http://localhost:2026/ |
 | `desk` command in Terminal | Same tools from the command line — `desk help` |
 
 macOS will ask a few one-time permissions: Terminal controlling Finder/System Events (for the desktop

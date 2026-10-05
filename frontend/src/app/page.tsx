@@ -1,26 +1,33 @@
-import { Footer } from "@/components/landing/footer";
-import { Header } from "@/components/landing/header";
-import { Hero } from "@/components/landing/hero";
-import { CaseStudySection } from "@/components/landing/sections/case-study-section";
-import { CommunitySection } from "@/components/landing/sections/community-section";
-import { SandboxSection } from "@/components/landing/sections/sandbox-section";
-import { SkillsSection } from "@/components/landing/sections/skills-section";
-import { WhatsNewSection } from "@/components/landing/sections/whats-new-section";
-import { DEFAULT_LOCALE } from "@/core/i18n/locale";
+import { redirect } from "next/navigation";
 
-export default function LandingPage() {
+import { StockHome } from "@/components/workspace/stock-story/stock-home";
+import { ClientGate } from "@/components/workspace/stock-story/ui";
+import {
+  WorkspaceBody,
+  WorkspaceContainer,
+} from "@/components/workspace/workspace-container";
+import { DEMO_THREAD_IDS } from "@/core/threads/static-demo";
+import { env } from "@/env";
+
+import WorkspaceLayout from "./workspace/layout";
+
+// 📈 股市故事: "/" is the dashboard itself (live stock cards, schedules, recent records),
+// rendered inside the same workspace shell (sidebar, auth, providers) as every other page.
+export const dynamic = "force-dynamic";
+
+export default function RootPage() {
+  if (env.NEXT_PUBLIC_STATIC_WEBSITE_ONLY === "true") {
+    return redirect(`/workspace/chats/${DEMO_THREAD_IDS[0]}`);
+  }
   return (
-    <div className="min-h-screen w-full overflow-x-clip bg-[#0a0a0a]">
-      <Header locale={DEFAULT_LOCALE} />
-      <main className="flex w-full flex-col">
-        <Hero />
-        <CaseStudySection />
-        <SkillsSection />
-        <SandboxSection />
-        <WhatsNewSection />
-        <CommunitySection />
-      </main>
-      <Footer />
-    </div>
+    <WorkspaceLayout>
+      <WorkspaceContainer>
+        <WorkspaceBody>
+          <ClientGate label="正在准备今日简报…">
+            <StockHome />
+          </ClientGate>
+        </WorkspaceBody>
+      </WorkspaceContainer>
+    </WorkspaceLayout>
   );
 }

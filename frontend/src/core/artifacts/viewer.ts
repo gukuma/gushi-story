@@ -116,7 +116,7 @@ export function parseArtifactViewerQuery(
  * anything an effect writes.
  */
 export function artifactViewerTitle(filepath: string | undefined) {
-  return filepath ? `${getFileName(filepath)} - DeerFlow` : "DeerFlow";
+  return filepath ? `${getFileName(filepath)} - 📈 股市故事` : "📈 股市故事";
 }
 
 /**

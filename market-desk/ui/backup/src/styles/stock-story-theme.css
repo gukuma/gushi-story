@@ -1,0 +1,107 @@
+/* 📈 股市故事 design package — applied to EVERY page (chat, scheduled tasks, agents, settings…),
+   not just the home and reports pages. Loaded after globals.css, so these values win.
+
+   Palette: neutral canvas · white panels · one ink navy (#1e1c34) for primary actions and
+   active states · four pastels (mint #e3f1e6, sky #e4ecf8, peach #fbebdb, stone #eeede8).
+   Prices: red = up, green = down (A-share convention). Shapes: pills for buttons/inputs,
+   large soft radii for cards and dialogs. Icons: lucide-react everywhere. */
+
+:root {
+  --radius: 1rem;
+  --background: #f4f4f0;
+  --foreground: #1e1c34;
+  --card: #ffffff;
+  --card-foreground: #1e1c34;
+  --popover: #ffffff;
+  --popover-foreground: #1e1c34;
+  --primary: #1e1c34;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f0eb;
+  --secondary-foreground: #1e1c34;
+  --muted: #f1f0eb;
+  --muted-foreground: #6d6a7c;
+  --accent: #ebeae4;
+  --accent-foreground: #1e1c34;
+  --destructive: #dc2626;
+  --border: #e7e5de;
+  --input: #dedcd4;
+  --ring: #7ccf94;
+  --chart-1: #6aa6e8;
+  --chart-2: #7ccf94;
+  --chart-3: #eea86a;
+  --chart-4: #b7b2a4;
+  --chart-5: #1e1c34;
+  --sidebar: #fbfbf9;
+  --sidebar-foreground: #1e1c34;
+  --sidebar-primary: #1e1c34;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #efeee8;
+  --sidebar-accent-foreground: #1e1c34;
+  --sidebar-border: #ebe9e2;
+  --sidebar-ring: #7ccf94;
+}
+
+.dark {
+  --background: #15141e;
+  --foreground: #f1f0f7;
+  --card: #1e1d2a;
+  --card-foreground: #f1f0f7;
+  --popover: #1e1d2a;
+  --popover-foreground: #f1f0f7;
+  --primary: #ecebf7;
+  --primary-foreground: #1e1c34;
+  --secondary: #2a2838;
+  --secondary-foreground: #f1f0f7;
+  --muted: #252433;
+  --muted-foreground: #a3a0b5;
+  --accent: #2c2a3c;
+  --accent-foreground: #f1f0f7;
+  --destructive: #f87171;
+  --border: rgb(255 255 255 / 9%);
+  --input: rgb(255 255 255 / 14%);
+  --ring: #7ccf94;
+  --chart-1: #6aa6e8;
+  --chart-2: #7ccf94;
+  --chart-3: #eea86a;
+  --chart-4: #b7b2a4;
+  --chart-5: #ecebf7;
+  --sidebar: #191824;
+  --sidebar-foreground: #f1f0f7;
+  --sidebar-primary: #ecebf7;
+  --sidebar-primary-foreground: #1e1c34;
+  --sidebar-accent: #262535;
+  --sidebar-accent-foreground: #f1f0f7;
+  --sidebar-border: rgb(255 255 255 / 7%);
+  --sidebar-ring: #7ccf94;
+}
+
+/* ---- shapes, shared by every DeerFlow component (shadcn data-slot hooks) ---- */
+[data-slot="button"] { border-radius: 9999px; }
+[data-slot="input"],
+[data-slot="select-trigger"],
+[data-slot="input-group"] { border-radius: 9999px; }
+[data-slot="textarea"] { border-radius: 1.25rem; }
+[data-slot="card"] { border-radius: 1.75rem; border-color: transparent; box-shadow: 0 1px 2px rgb(30 28 52 / 4%); }
+[data-slot="dialog-content"],
+[data-slot="alert-dialog-content"] { border-radius: 1.75rem; }
+[data-slot="dropdown-menu-content"],
+[data-slot="popover-content"],
+[data-slot="hover-card-content"],
+[data-slot="command"] { border-radius: 1.1rem; }
+[data-slot="dropdown-menu-item"] { border-radius: 0.7rem; }
+[data-slot="badge"] { border-radius: 9999px; }
+[data-slot="tabs-list"] { border-radius: 9999px; padding: 4px; }
+[data-slot="tabs-trigger"] { border-radius: 9999px; }
+[data-slot="tabs-trigger"][data-state="active"] { background: var(--primary); color: var(--primary-foreground); }
+[data-slot="switch"][data-state="checked"] { background: #7ccf94; }
+
+/* sidebar: soft pill highlight for the active page */
+[data-sidebar="menu-button"] { border-radius: 0.8rem; }
+[data-sidebar="menu-button"][data-active="true"] { background: var(--sidebar-primary); color: var(--sidebar-primary-foreground); }
+[data-sidebar="menu-sub-button"] { border-radius: 0.7rem; }
+
+/* chat: the composer and message bubbles follow the same soft language */
+[data-slot="sidebar-inset"] { background: var(--background); }
+.prose :where(h1, h2, h3) { letter-spacing: -0.01em; }
+.prose :where(table) { border-radius: 1rem; overflow: hidden; }
+[data-sidebar="menu-button"][data-active="true"] :where(*) { color: inherit; }

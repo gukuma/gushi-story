@@ -94,6 +94,9 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .langsw button[aria-pressed=true]{background:var(--ink);color:var(--surface)}
 .cn-colors .md td .up{color:var(--bad)} .cn-colors .md td .down{color:var(--good-ink)}
 :lang(zh) .md{font-family:"PingFang SC","Songti SC","Noto Serif CJK SC",var(--serif);line-height:1.85}
+.embed header,.embed #setup{display:none}
+.embed main{padding-top:12px;max-width:none}
+.embed .list{max-height:calc(100vh - 230px)}
 .wl{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
 @media (max-width:820px){
   header,main{padding-left:16px;padding-right:16px}
@@ -217,12 +220,15 @@ const I18N = {
     noruns30:"暂无运行记录。", nofail:"近 30 日没有失败的运行。", tableview:"表格视图", tokens:"Token",
     wl_edit:p=>`编辑 <code>${p}</code>，每次简报都会读取。`, wl_none:p=>`找不到自选列表：${p}`,
     sections:{a_shares:"A 股", hong_kong:"港股", indices:"指数", macro:"宏观", crypto:"加密资产"},
-    status:{success:"成功", active:"启用", resolved:"已验证", running:"运行中", queued:"排队中", launching:"启动中", open:"待验证", paused:"已暂停", skipped:"已跳过", void:"作废", failed:"失败", error:"错误", timeout:"超时", schedule:"定时", manual:"手动"},
+    status:{success:"成功", active:"启用", enabled:"启用", resolved:"已验证", running:"运行中", queued:"排队中", launching:"启动中", open:"待验证", paused:"已暂停", skipped:"已跳过", void:"作废", failed:"失败", error:"错误", timeout:"超时", schedule:"定时", manual:"手动"},
     in:t=>t+"后", ago:t=>t+"前",
   },
 };
 const params = new URLSearchParams(location.search);
-let UI = params.get("lang") || (location.pathname.startsWith("/zh") ? "zh" : location.pathname.startsWith("/en") ? "en" : null);
+const BASE = location.pathname.startsWith("/desk") ? "/desk" : "";
+const EMBED = params.get("embed") === "1";
+if (EMBED) document.documentElement.classList.add("embed");
+let UI = params.get("lang") || (EMBED ? "zh" : null) || (location.pathname.startsWith("/zh") ? "zh" : location.pathname.startsWith("/en") ? "en" : null);
 try { UI = UI || localStorage.getItem("md-ui"); } catch(_){}
 let UI_FROM_SETTINGS = !UI;
 const T = (k, ...a) => { const v = (I18N[UI||"en"][k] ?? I18N.en[k]); return typeof v === "function" ? v(...a) : v; };
@@ -239,7 +245,7 @@ function applyStatic(){
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const api = p => fetch(p).then(r => r.json());
+const api = p => fetch(BASE + p).then(r => r.json());
 const LOC = () => UI === "zh" ? "zh-CN" : undefined;
 const fmtN = n => n == null ? "–" : Number(n).toLocaleString(LOC());
 const fmtTok = n => n == null ? "–" : UI === "zh" && n >= 1e4 ? (n/1e4).toFixed(n>=1e5?0:1)+"万" : n >= 1e6 ? (n/1e6).toFixed(n>=1e7?0:1)+"M" : n >= 1e3 ? Math.round(n/1e3)+"k" : String(n);
@@ -248,7 +254,7 @@ const rel = iso => { if(!iso) return ""; const s=(new Date(iso)-Date.now())/1000
   const zh = UI === "zh";
   const t = a<3600? Math.round(a/60)+(zh?" 分钟":"m") : a<86400? Math.round(a/3600)+(zh?" 小时":"h") : Math.round(a/86400)+(zh?" 天":"d");
   return s>0? T("in", t) : T("ago", t); };
-const STATUS = {success:"ok", active:"ok", resolved:"ok", running:"warn", queued:"warn", launching:"warn", open:"warn", paused:"", skipped:"", void:"", failed:"bad", error:"bad", timeout:"bad"};
+const STATUS = {success:"ok", active:"ok", enabled:"ok", resolved:"ok", running:"warn", queued:"warn", launching:"warn", open:"warn", paused:"", skipped:"", void:"", failed:"bad", error:"bad", timeout:"bad"};
 const stLabel = s => (I18N[UI||"en"].status[s] || s || "–");
 const st = s => `<span class="st"><span class="dot ${STATUS[s]||""}"></span>${esc(stLabel(s))}</span>`;
 const fmtDur = d => d==null ? "–" : UI==="zh" ? (d>=60 ? `${Math.floor(d/60)} 分 ${d%60} 秒` : `${d} 秒`) : (d>=60 ? `${Math.floor(d/60)}m ${d%60}s` : `${d}s`);
@@ -489,7 +495,9 @@ $("#langsw").addEventListener("click", e => { const b = e.target.closest("button
 function showErr(e){ $("#stamp").textContent = T("error") + ": " + e.message; }
 function refresh(){ loadOverview().then(() => LOADERS[TAB]()).catch(showErr); }
 applyStatic();
-try { const t = localStorage.getItem("md-tab"); if (t && LOADERS[t]) { TAB = t; document.querySelectorAll("nav.tabs button").forEach(x => x.setAttribute("aria-selected", x.dataset.tab===t)); document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === "p-"+t)); } } catch(_){}
+if (EMBED) document.addEventListener("click", e => { const a = e.target.closest("a[href]"); if (!a) return;
+  const u = new URL(a.href, location.href); if (u.pathname.startsWith("/workspace")) { e.preventDefault(); window.top.location.href = u.pathname + u.search; } });
+try { const t = params.get("tab") || localStorage.getItem("md-tab"); if (t && LOADERS[t]) { TAB = t; document.querySelectorAll("nav.tabs button").forEach(x => x.setAttribute("aria-selected", x.dataset.tab===t)); document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === "p-"+t)); } } catch(_){}
 refresh(); setInterval(() => { if (!document.hidden) refresh(); }, 60000);
 </script>
 </body>

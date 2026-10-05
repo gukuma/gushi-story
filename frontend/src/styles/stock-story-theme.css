@@ -1,0 +1,266 @@
+/* 📈 股市故事 design package — "research house terminal".
+   Think a quant fund's internal research desk crossed with a data-ops console: paper-white or
+   graphite surfaces, hairline rules instead of shadows, small radii, serif headlines (like a
+   research note), tabular monospace numerals, one signal colour (amber) and two market colours
+   (A-share convention: red = up, green = down). No pastel blobs, no pills, no AI sparkle.
+   Applied to EVERY page (chat, scheduled tasks, agents, settings…) via shadcn tokens + data-slot. */
+
+:root {
+  /* type */
+  --ss-serif:
+    "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC",
+    "Source Serif 4", Georgia, "Times New Roman", serif;
+  --ss-sans:
+    -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue",
+    "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  --ss-mono:
+    "SF Mono", "JetBrains Mono", "IBM Plex Mono", Menlo, Consolas, monospace;
+
+  /* surfaces (light = paper) */
+  --ss-canvas: #f3f2ee;
+  --ss-panel: #fbfbf9;
+  --ss-sunken: #ecebe6;
+  --ss-sunken-2: #e3e2dc;
+  --ss-line: #d9d7d0;
+  --ss-line-strong: #b9b6ad;
+  --ss-text: #14171c;
+  --ss-muted: #5f6672;
+  --ss-ink: #0e1621; /* primary actions, terminal panes */
+  --ss-ink-fg: #f2f1ec;
+  --ss-signal: #b7791f; /* amber: unread, focus, active */
+  --ss-signal-soft: #f3e6cf;
+  --ss-data: #2b6f8a; /* teal: links, series */
+  --ss-up: #c0392b;
+  --ss-down: #1e7a4c;
+  --ss-up-soft: #f6e2df;
+  --ss-down-soft: #dcefe4;
+
+  --radius: 0.375rem;
+  --background: var(--ss-canvas);
+  --foreground: var(--ss-text);
+  --card: var(--ss-panel);
+  --card-foreground: var(--ss-text);
+  --popover: var(--ss-panel);
+  --popover-foreground: var(--ss-text);
+  --primary: var(--ss-ink);
+  --primary-foreground: var(--ss-ink-fg);
+  --secondary: var(--ss-sunken);
+  --secondary-foreground: var(--ss-text);
+  --muted: var(--ss-sunken);
+  --muted-foreground: var(--ss-muted);
+  --accent: var(--ss-sunken-2);
+  --accent-foreground: var(--ss-text);
+  --destructive: var(--ss-up);
+  --border: var(--ss-line);
+  --input: var(--ss-line);
+  --ring: var(--ss-signal);
+  --chart-1: var(--ss-data);
+  --chart-2: var(--ss-signal);
+  --chart-3: #6b5b95;
+  --chart-4: #8a8578;
+  --chart-5: var(--ss-ink);
+  --sidebar: #eceae4;
+  --sidebar-foreground: var(--ss-text);
+  --sidebar-primary: var(--ss-ink);
+  --sidebar-primary-foreground: var(--ss-ink-fg);
+  --sidebar-accent: #e2e0d9;
+  --sidebar-accent-foreground: var(--ss-text);
+  --sidebar-border: var(--ss-line);
+  --sidebar-ring: var(--ss-signal);
+}
+
+.dark {
+  /* surfaces (dark = graphite terminal) */
+  --ss-canvas: #0b0e12;
+  --ss-panel: #12161c;
+  --ss-sunken: #181d24;
+  --ss-sunken-2: #1f252d;
+  --ss-line: #262c35;
+  --ss-line-strong: #3a424d;
+  --ss-text: #e4e6e9;
+  --ss-muted: #8a929e;
+  --ss-ink: #e4e6e9;
+  --ss-ink-fg: #0b0e12;
+  --ss-signal: #e0a43f;
+  --ss-signal-soft: #2a2416;
+  --ss-data: #5fb3cf;
+  --ss-up: #e5534b;
+  --ss-down: #3fb37f;
+  --ss-up-soft: #2a1718;
+  --ss-down-soft: #13261d;
+
+  --background: var(--ss-canvas);
+  --foreground: var(--ss-text);
+  --card: var(--ss-panel);
+  --card-foreground: var(--ss-text);
+  --popover: var(--ss-panel);
+  --popover-foreground: var(--ss-text);
+  --primary: var(--ss-ink);
+  --primary-foreground: var(--ss-ink-fg);
+  --secondary: var(--ss-sunken);
+  --secondary-foreground: var(--ss-text);
+  --muted: var(--ss-sunken);
+  --muted-foreground: var(--ss-muted);
+  --accent: var(--ss-sunken-2);
+  --accent-foreground: var(--ss-text);
+  --destructive: var(--ss-up);
+  --border: var(--ss-line);
+  --input: var(--ss-line);
+  --ring: var(--ss-signal);
+  --sidebar: #0e1217;
+  --sidebar-foreground: var(--ss-text);
+  --sidebar-primary: var(--ss-ink);
+  --sidebar-primary-foreground: var(--ss-ink-fg);
+  --sidebar-accent: #171c22;
+  --sidebar-accent-foreground: var(--ss-text);
+  --sidebar-border: var(--ss-line);
+  --sidebar-ring: var(--ss-signal);
+  font-weight: 400;
+}
+
+body {
+  font-family: var(--ss-sans);
+  -webkit-font-smoothing: antialiased;
+}
+.font-serif,
+.ss-serif {
+  font-family: var(--ss-serif);
+}
+.font-mono,
+code,
+kbd,
+pre {
+  font-family: var(--ss-mono);
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+::selection {
+  background: var(--ss-signal-soft);
+}
+
+/* page chrome: research-note headings */
+.ss-page h1,
+.ss-page h2 {
+  font-family: var(--ss-serif);
+  letter-spacing: 0;
+}
+
+/* ---- shapes for every DeerFlow component (shadcn data-slot hooks): small radii, hairlines ---- */
+[data-slot="button"] {
+  border-radius: 4px;
+  box-shadow: none;
+}
+[data-slot="input"],
+[data-slot="select-trigger"],
+[data-slot="textarea"] {
+  border-radius: 4px;
+}
+[data-slot="input-group"] {
+  border-radius: 6px;
+  box-shadow: none;
+}
+[data-slot="card"] {
+  border-radius: 6px;
+  border: 1px solid var(--ss-line);
+  box-shadow: none;
+}
+[data-slot="dialog-content"],
+[data-slot="alert-dialog-content"] {
+  border-radius: 8px;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.22);
+}
+[data-slot="sheet-content"] {
+  border-radius: 0;
+}
+[data-slot="dropdown-menu-content"],
+[data-slot="popover-content"],
+[data-slot="hover-card-content"],
+[data-slot="command"] {
+  border-radius: 6px;
+  border: 1px solid var(--ss-line);
+}
+[data-slot="dropdown-menu-item"] {
+  border-radius: 3px;
+}
+[data-slot="badge"] {
+  border-radius: 3px;
+}
+[data-slot="tabs-list"] {
+  border-radius: 5px;
+  padding: 3px;
+}
+[data-slot="tabs-trigger"] {
+  border-radius: 3px;
+}
+[data-slot="tabs-trigger"][data-state="active"] {
+  background: var(--ss-ink);
+  color: var(--ss-ink-fg);
+}
+[data-slot="switch"][data-state="checked"] {
+  background: var(--ss-signal);
+}
+
+/* sidebar: terminal-style active row (amber rule on the left, no filled pill) */
+[data-sidebar="menu-button"] {
+  border-radius: 4px;
+}
+[data-sidebar="menu-button"][data-active="true"] {
+  background: var(--sidebar-accent);
+  color: var(--ss-text);
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--ss-signal);
+}
+[data-sidebar="menu-button"][data-active="true"] :where(*) {
+  color: inherit;
+}
+[data-sidebar="menu-sub-button"] {
+  border-radius: 3px;
+}
+[data-sidebar="group-label"] {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ss-muted);
+}
+
+/* chat: calmer composer and answers */
+[data-slot="sidebar-inset"] {
+  background: var(--background);
+}
+.prose :where(h1, h2, h3) {
+  font-family: var(--ss-serif);
+  letter-spacing: 0;
+}
+.prose :where(table) {
+  border-radius: 4px;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+
+/* print / save-as-PDF a report: only the reader is printed */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  [data-print-root],
+  [data-print-root] * {
+    visibility: visible;
+  }
+  [data-print-root] {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    padding: 0 12mm;
+  }
+}
+
+/* pills → small-radius tags everywhere (DeerFlow chips, suggestion buttons, badges). Round icon
+   buttons and status dots (no horizontal padding) stay round. */
+.rounded-full[class*="px-"],
+.rounded-full[class*="pl-"] {
+  border-radius: 4px;
+}
+.rounded-2xl,
+.rounded-3xl {
+  border-radius: 8px;
+}

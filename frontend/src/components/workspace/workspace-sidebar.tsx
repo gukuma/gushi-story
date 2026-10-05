@@ -1,5 +1,9 @@
 "use client";
 
+// 📈 股市故事 sidebar: 新研究 / 搜索, then the information levels 今日 · 研报 · 项目 · 对话, unread
+// reports, recent chats, automation status, tutorial, settings. Also mounts the chat context bar.
+// (Original DeerFlow sidebar is backed up by apply_ui.py.)
+
 import {
   Sidebar,
   SidebarHeader,
@@ -9,13 +13,18 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-import { WorkspaceChannelsList } from "./channels/workspace-channels-list";
-import { PluginNavigation } from "./plugin-navigation";
-import { ProjectsSection } from "./projects-section";
-import { RecentChatList } from "./recent-chat-list";
+import { HealthGuard } from "./stock-story/health-guard";
+import { NavProgress } from "./stock-story/nav-progress";
+import {
+  ChatContextBar,
+  SidebarStatus,
+  StockNav,
+  TickerChatGroups,
+} from "./stock-story/stock-sidebar";
+import { TutorialLayer, TutorialToggle } from "./stock-story/tutorial";
+import { SafeBoundary } from "./stock-story/ui";
 import { ThreadDeleteDialogProvider } from "./thread-delete-dialog";
 import { WorkspaceHeader } from "./workspace-header";
-import { WorkspaceNavChatList } from "./workspace-nav-chat-list";
 import { WorkspaceNavMenu } from "./workspace-nav-menu";
 
 export function WorkspaceSidebar({
@@ -29,21 +38,30 @@ export function WorkspaceSidebar({
           <WorkspaceHeader />
         </SidebarHeader>
         <SidebarContent>
-          <WorkspaceNavChatList />
-          <PluginNavigation />
-          <WorkspaceChannelsList />
+          <SafeBoundary label="导航">
+            <StockNav />
+          </SafeBoundary>
           {isSidebarOpen && (
-            <>
-              <ProjectsSection />
-              <RecentChatList />
-            </>
+            <SafeBoundary label="未读研报和最近对话">
+              <TickerChatGroups />
+            </SafeBoundary>
           )}
         </SidebarContent>
         <SidebarFooter>
+          <SafeBoundary label="状态">
+            <SidebarStatus />
+          </SafeBoundary>
+          <TutorialToggle />
           <WorkspaceNavMenu />
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
+      <TutorialLayer />
+      <SafeBoundary label="本对话">
+        <ChatContextBar />
+      </SafeBoundary>
+      <NavProgress />
+      <HealthGuard />
     </ThreadDeleteDialogProvider>
   );
 }

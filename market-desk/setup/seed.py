@@ -65,6 +65,10 @@ class Api:
         req.add_header("Content-Type", "application/x-www-form-urlencoded")
         return self._send(req)
 
+    def initialize(self, email: str, password: str) -> tuple[int, object]:
+        """Create the first admin account (only works while DeerFlow has no admin). Also logs in."""
+        return self.call("POST", "/api/v1/auth/initialize", {"email": email, "password": password, "remember_me": True})
+
     def _csrf(self) -> str | None:
         return next((c.value for c in self.jar if c.name == "csrf_token"), None)
 
@@ -90,6 +94,52 @@ class Api:
                 return e.code, raw
 
 
+def ask_new_password() -> str:
+    while True:
+        p1 = getpass.getpass("Choose a password (8+ characters, not a common one): ")
+        if len(p1) < 8:
+            print("  Too short.")
+            continue
+        if p1 != getpass.getpass("Repeat the password: "):
+            print("  Didn't match, try again.")
+            continue
+        return p1
+
+
+def login_or_create(api: "Api") -> bool:
+    """Log in; if DeerFlow has no account yet, create the admin account first."""
+    try:
+        st, status = api.call("GET", "/api/v1/auth/setup-status")
+    except urllib.error.URLError as e:
+        print(f"Cannot reach DeerFlow at {api.base}: {e.reason}. Is it running? (make dev / desk start)", file=sys.stderr)
+        return False
+    if st == 200 and isinstance(status, dict) and status.get("needs_setup"):
+        print("DeerFlow has no account yet — let's create yours (this becomes the admin account).")
+        email = os.environ.get("DEERFLOW_EMAIL") or input("Email for your DeerFlow account: ").strip()
+        while True:
+            password = os.environ.get("DEERFLOW_PASSWORD") or ask_new_password()
+            st, res = api.initialize(email, password)
+            if st in (200, 201):
+                print(f"✓ Created account {email}. Use it to sign in at {api.base}")
+                return True
+            print(f"! Could not create the account ({st}): {res}", file=sys.stderr)
+            if st != 422 or os.environ.get("DEERFLOW_PASSWORD"):
+                return False
+            print("  (Usually: password too common or email malformed. Try again.)")
+    email = os.environ.get("DEERFLOW_EMAIL") or input("DeerFlow email: ").strip()
+    password = os.environ.get("DEERFLOW_PASSWORD") or getpass.getpass("DeerFlow password: ")
+    st, res = api.login(email, password)
+    if st == 200:
+        return True
+    print(f"Login failed ({st}): {res}", file=sys.stderr)
+    if st == 401:
+        print("An account already exists but this email/password doesn't match it.\n"
+              "  - If you created it in the browser (http://localhost:2026), use those details.\n"
+              "  - To see which email it is: sqlite3 backend/.deer-flow/data/deerflow.db 'select email from users;'\n"
+              "  - Forgot the password: see 'Forgot your DeerFlow password' in market-desk/README.md.", file=sys.stderr)
+    return False
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--update", action="store_true")
@@ -97,6 +147,7 @@ def main() -> int:
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--skip-agents", action="store_true")
     ap.add_argument("--lang", choices=sorted(LANGS), help="set the desk language before syncing")
+    ap.add_argument("--account-only", action="store_true", help="just create the first account / check the login")
     a = ap.parse_args()
 
     if a.lang:
@@ -108,16 +159,11 @@ def main() -> int:
     api = Api(os.environ.get("DEERFLOW_URL", "http://127.0.0.1:2026"))
     desk = json.loads((HERE / "desk.json").read_text(encoding="utf-8"))
 
-    email = os.environ.get("DEERFLOW_EMAIL") or input("DeerFlow email: ").strip()
-    password = os.environ.get("DEERFLOW_PASSWORD") or getpass.getpass("DeerFlow password: ")
-    try:
-        st, res = api.login(email, password)
-    except urllib.error.URLError as e:
-        print(f"Cannot reach DeerFlow at {api.base}: {e.reason}. Is `make dev` running?", file=sys.stderr)
+    if not login_or_create(api):
         return 1
-    if st != 200:
-        print(f"Login failed ({st}): {res}", file=sys.stderr)
-        return 1
+    if a.account_only:
+        print(f"✓ Signed in to DeerFlow at {api.base}. Next: bash market-desk/desk.sh seed")
+        return 0
 
     st, tasks = api.call("GET", "/api/scheduled-tasks")
     if st != 200:
@@ -131,7 +177,10 @@ def main() -> int:
     if not a.skip_agents:
         for ag in desk["agents"]:
             soul = (HERE / ag["soul_file"]).read_text(encoding="utf-8")
-            body = {k: ag[k] for k in ("display_name", "description", "skills")}
+            # No skills whitelist: the local sandbox (host bash on) refuses per-agent skill lists.
+            # The SOUL names the skills each agent should use; all enabled skills stay loadable.
+            body = {k: ag[k] for k in ("display_name", "description")}
+            body["skills"] = None
             body["soul"] = soul
             st, res = api.call("POST", "/api/agents", {"name": ag["name"], **body})
             if st == 201:
@@ -151,7 +200,7 @@ def main() -> int:
     for t in desk["scheduled_tasks"]:
         existing = by_title.get(t["title"])
         if t.get("lang", "en") not in active:
-            if existing and existing.get("status") == "active":
+            if existing and existing.get("status") in ("enabled", "active"):
                 st, res = api.call("POST", f"/api/scheduled-tasks/{existing['id']}/pause")
                 print(f"⏸ paused '{t['title']}' ({t.get('lang')})" if st == 200 else f"! pause '{t['title']}' failed ({st}): {res}")
             continue

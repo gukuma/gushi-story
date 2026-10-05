@@ -81,6 +81,12 @@ const config = {
       });
     }
 
+    // 📈 股市故事: Market Desk data service (reports, quotes, conversations by ticker, keys)
+    rewrites.unshift({
+      source: "/desk/:path*",
+      destination: `${process.env.MARKET_DESK_URL ?? "http://127.0.0.1:2027"}/:path*`,
+      locale: false,
+    });
     return rewrites;
   },
 };

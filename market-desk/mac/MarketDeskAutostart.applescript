@@ -1,11 +1,16 @@
--- Market Desk Autostart.app — login item: start DeerFlow + dashboard in the background, no windows.
+-- 股市故事 自动启动 — 登录项：登录后打开“终端”运行启动脚本（make dev），就绪后 Safari 自动打开 http://localhost:2026/
+property startup : "__STARTUP__"
 property ctl : "__DESKCTL__"
 
 on run
-	delay 20 -- let the network and Docker/Homebrew services settle after login
+	delay 15 -- 等网络和系统服务就绪
 	try
-		do shell script "/bin/bash " & quoted form of ctl & " start --quiet"
+		do shell script "open -a Terminal " & quoted form of startup
 	on error errMsg
-		display notification "Autostart failed — open Market Desk Tools → View logs" with title "Market Desk"
+		try
+			do shell script "/bin/bash " & quoted form of ctl & " open --quiet"
+		on error
+			display notification "自动启动失败——打开“股市故事 工具”→ 查看日志" with title "📈 股市故事"
+		end try
 	end try
 end run

@@ -16,8 +16,6 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useI18n } from "@/core/i18n/hooks";
 import { cn } from "@/lib/utils";
 
-import { GithubIcon } from "./github-icon";
-import { Tooltip } from "./tooltip";
 // Workspace sections that have an index route (/workspace/<section>/page.tsx)
 // and can therefore be linked to from the breadcrumb.
 const LINKABLE_SECTIONS: Record<string, true> = {
@@ -99,18 +97,6 @@ export function WorkspaceHeader({
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <div className="pr-4">
-        <Tooltip content={t.workspace.githubTooltip}>
-          <a
-            href="https://github.com/bytedance/deer-flow"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="opacity-75 transition hover:opacity-100"
-          >
-            <GithubIcon className="size-6" />
-          </a>
-        </Tooltip>
-      </div>
     </header>
   );
 }
@@ -140,5 +126,12 @@ function nameOfSegment(
   if (!segment) return t.common.home;
   if (segment === "workspace") return t.breadcrumb.workspace;
   if (segment === "chats") return t.breadcrumb.chats;
+  if (segment === "reports") return "研报";
+  if (segment === "themes") return "项目";
+  if (segment === "stocks") return "股票";
+  if (segment === "health") return "系统状态";
+  if (segment === "keys") return "API 密钥";
+  if (segment === "scheduled-tasks") return "定时任务";
+  if (segment === "agents") return "助手";
   return segment[0]?.toUpperCase() + segment.slice(1);
 }

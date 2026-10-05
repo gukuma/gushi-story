@@ -18,12 +18,18 @@
 #   desk search <name>    switch web search: tavily | tencent | infoquest | ddg | brave | serper
 #   desk env              edit .env by hand (then: desk restart)
 #   desk library          open the research library in Finder
+#   desk account          create your DeerFlow login (first run) / check it works
+#   desk reset-password   set a new DeerFlow password from the terminal
 #   desk lang [en|zh|both]  show / switch desk language (agents, skills, schedules, dashboard)
 #   desk brief            live cross-asset snapshot in the terminal
 #   desk backup           zip library + custom skills + config to ~/MarketDesk-backups
+#   desk dev              stop everything, then run make dev in this terminal (hot reload)
+#   desk free             stop any DeerFlow that is holding ports 8001/3000/2026
+#   desk selftest         check every part end to end and say what to fix
+#   desk github [name]    upload the whole project to your GitHub (private; never uploads .env or data)
 #
 # Settings live in market-desk/mac/settings.env (written by install.sh):
-#   MODE=prod|dev   OPEN_DASHBOARD=1|0   EDITOR_APP="Visual Studio Code"   SAVED_PATH=...
+#   MODE=prod|dev   BROWSER_APP=Safari   OPEN_DASHBOARD=0|1   EDITOR_APP="Visual Studio Code"   SAVED_PATH=...
 
 set -uo pipefail
 
@@ -35,7 +41,7 @@ LOGS="$ROOT/logs"
 UI_URL="http://localhost:2026"
 DASH_URL="http://127.0.0.1:2027"
 
-MODE="prod"; OPEN_DASHBOARD="1"; EDITOR_APP=""; SAVED_PATH=""
+MODE="prod"; OPEN_DASHBOARD="0"; BROWSER_APP="Safari"; EDITOR_APP=""; SAVED_PATH=""
 [ -f "$HERE/settings.env" ] && . "$HERE/settings.env"
 # Login items and app bundles start with a bare PATH; restore the one captured at install time.
 export PATH="${SAVED_PATH:+$SAVED_PATH:}/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:$HOME/.cargo/bin:/usr/bin:/bin:/usr/sbin:/sbin"
@@ -63,7 +69,25 @@ open_in_editor() {
   if [ -d "$target" ]; then open "$target"; else open -t "$target"; fi   # Finder / TextEdit
 }
 
+open_browser() {
+  if [ -n "$BROWSER_APP" ] && open -Ra "$BROWSER_APP" 2>/dev/null; then open -a "$BROWSER_APP" "$1"; else open "$1"; fi
+}
+
+wait_ui() {  # dev mode compiles on first request; wait until the page answers
+  local c
+  for _ in $(seq 1 120); do
+    c="$(code_of http://127.0.0.1:2026/)"; [ "$c" != "000" ] && [ "${c:0:1}" != "5" ] && return 0; sleep 2
+  done
+  return 1
+}
+
 start_dashboard() {
+  # restart the data service when its code changed since it started (after an update)
+  if dashboard_up && [ -f "$LOGS/dashboard.pid" ] && \
+     [ -n "$(find "$DESK/dashboard" "$SKILLS/market-data/scripts" -name '*.py' -newer "$LOGS/dashboard.pid" -print -quit 2>/dev/null)" ]; then
+    say "数据服务代码已更新，重启数据服务…"
+    stop_dashboard; sleep 0.5
+  fi
   dashboard_up && return 0
   nohup python3 "$DESK/dashboard/server.py" --port 2027 </dev/null >>"$LOGS/dashboard.log" 2>&1 &
   echo $! >"$LOGS/dashboard.pid"
@@ -76,10 +100,41 @@ stop_dashboard() {
   pkill -f "market-desk/dashboard/server.py" 2>/dev/null || true
 }
 
+port_busy() { lsof -nP -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1; }
+running_mode() {  # dev | prod | none — which DeerFlow frontend is running
+  if pgrep -f "next dev" >/dev/null 2>&1 || pgrep -f "scripts/dev.mjs" >/dev/null 2>&1; then echo dev
+  elif pgrep -f "next start" >/dev/null 2>&1 || pgrep -f "next-server" >/dev/null 2>&1; then echo prod
+  elif port_busy 8001 || port_busy 2026 || port_busy 3000; then echo other
+  else echo none; fi
+}
+
+# Stop whatever DeerFlow is running (daemon prod OR a leftover dev session) and free the ports.
+stop_all_deerflow() {
+  (cd "$ROOT" && bash scripts/serve.sh --stop) </dev/null >>"$LOGS/desk.log" 2>&1 || true
+  (cd "$ROOT" && make stop) </dev/null >>"$LOGS/desk.log" 2>&1 || true
+  for port in 8001 3000 2026; do
+    for pid in $(lsof -nP -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null); do
+      kill "$pid" 2>/dev/null || true
+    done
+  done
+  sleep 1
+}
+
 start() {
   if [ ! -f "$ROOT/config.yaml" ]; then
     say "No config.yaml yet. Run 'make setup' and 'bash market-desk/desk.sh configure' first."
     notify "Not set up yet: run make setup"; return 1
+  fi
+  # Keep the 📈 股市故事 UI applied (re-applies itself after a DeerFlow update; a no-op otherwise).
+  [ -f "$DESK/ui/apply_ui.py" ] && python3 "$DESK/ui/apply_ui.py" >>"$LOGS/desk.log" 2>&1
+  start_dashboard || say "Data service did not come up; see $LOGS/dashboard.log"
+  local rm; rm="$(running_mode)"
+  if deerflow_up && [ "$rm" != "$MODE" ] && [ "$rm" != "none" ]; then
+    say "DeerFlow 正在以 $rm 模式运行，设置是 $MODE 模式：先停掉再按 $MODE 模式启动…"
+    stop_all_deerflow
+  elif ! deerflow_up && [ "$rm" != "none" ]; then
+    say "发现残留的 DeerFlow 进程占用端口，先清理…"
+    stop_all_deerflow
   fi
   if deerflow_up; then
     say "DeerFlow already running at $UI_URL"
@@ -87,7 +142,13 @@ start() {
     local flags=(--daemon)
     if [ -x "$ROOT/backend/.venv/bin/python" ] && [ -d "$ROOT/frontend/node_modules" ]; then flags+=(--skip-install); fi
     if [ "$MODE" = "dev" ]; then flags+=(--dev)
-    else flags+=(--prod); [ -d "$ROOT/frontend/.next" ] && [ -f "$ROOT/frontend/.next/BUILD_ID" ] && flags+=(--skip-frontend-build)
+    else
+      flags+=(--prod)
+      # reuse the last frontend build unless the UI source changed since (then rebuild, a few minutes)
+      local build="$ROOT/frontend/.next/BUILD_ID"
+      if [ -f "$build" ] && [ -z "$(find "$ROOT/frontend/src" "$ROOT/frontend/public" "$ROOT/frontend/next.config.js" -type f -newer "$build" -print -quit 2>/dev/null)" ]; then
+        flags+=(--skip-frontend-build)
+      fi
     fi
     say "Starting DeerFlow (${flags[*]}) — first start builds the frontend and can take a few minutes…"
     echo "=== $(date '+%F %T') start ${flags[*]}" >>"$LOGS/desk.log"
@@ -95,15 +156,14 @@ start() {
       say "DeerFlow failed to start. See: $LOGS/desk.log"; notify "DeerFlow failed to start — see logs"; return 1
     fi
   fi
-  start_dashboard || say "Dashboard did not come up; see $LOGS/dashboard.log"
-  say "Ready: DeerFlow $UI_URL · Dashboard $DASH_URL"
-  [ "$QUIET" = 1 ] && notify "Running · DeerFlow :2026 · Dashboard :2027"
+  say "Ready: 📈 股市故事 $UI_URL"
+  [ "$QUIET" = 1 ] && notify "📈 股市故事已启动"
   return 0
 }
 
 stop() {
   say "Stopping…"
-  (cd "$ROOT" && bash scripts/serve.sh --stop) </dev/null >>"$LOGS/desk.log" 2>&1 || true
+  stop_all_deerflow
   stop_dashboard
   say "Stopped."
 }
@@ -233,9 +293,12 @@ args=(); for a in "$@"; do [ "$a" = "--quiet" ] || args+=("$a"); done
 set -- "${args[@]+"${args[@]}"}"
 case "$cmd" in
   start)     start ;;
-  open)      start && { open "$UI_URL/workspace"; [ "$OPEN_DASHBOARD" = 1 ] && open "$DASH_URL"; true; } ;;
+  open)      start && wait_ui && { open_browser "$UI_URL/"; [ "$OPEN_DASHBOARD" = 1 ] && open "$DASH_URL"; true; } ;;
   zh)        start_dashboard && open "$DASH_URL/zh" ;;
   dashboard) start_dashboard && open "$DASH_URL" ;;
+  data)      start_dashboard ;;
+  mode)      case "${1:-}" in dev|prod) /usr/bin/sed -i '' "s|^MODE=[a-z]*|MODE=$1|" "$HERE/settings.env" && say "启动模式已改为 $1（下次启动生效：desk restart）" ;; *) say "当前模式：$MODE（用法：desk mode dev|prod）" ;; esac ;;
+  terminal)  open -a Terminal "$HERE/startup.command" ;;
   stop)      stop ;;
   restart)   stop; sleep 1; start ;;
   status)    status ;;
@@ -250,8 +313,16 @@ case "$cmd" in
   library)   open "$DESK/library" ;;
   keys)      python3 "$HERE/keys.py" "${1:-set}" ;;
   lang)      python3 "$DESK/setup/lang.py" "$@" ;;
+  account)   python3 "$DESK/setup/seed.py" --account-only ;;
+  seed)      python3 "$DESK/setup/seed.py" "$@" ;;
+  reset-password) (cd "$ROOT/backend" && PYTHONPATH=. uv run --no-sync python "$DESK/setup/reset_password.py") ;;
   search)    python3 "$HERE/keys.py" search "${1:-}" ;;
   brief)     python3 "$ROOT/skills/custom/market-data/scripts/market_data.py" snapshot "$@" ;;
   backup)    backup ;;
-  *)         sed -n '2,29p' "$0" | sed 's/^# \{0,1\}//' ;;
+  github)    bash "$HERE/publish-github.sh" "$@" ;;
+  dev)       say "停掉正在运行的服务，然后以开发模式启动（Ctrl-C 停止）…"; stop_all_deerflow; start_dashboard
+             cd "$ROOT" && exec make dev ;;
+  free)      stop_all_deerflow; say "已释放 8001 / 3000 / 2026 端口" ;;
+  selftest)  start_dashboard; python3 "$DESK/dashboard/selftest.py" ;;
+  *)         sed -n '2,35p' "$0" | sed 's/^# \{0,1\}//' ;;
 esac

@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  BugIcon,
   ChevronsUpDown,
   GlobeIcon,
   InfoIcon,
@@ -27,7 +26,6 @@ import {
 } from "@/components/ui/sidebar";
 import { useI18n } from "@/core/i18n/hooks";
 
-import { GithubIcon } from "./github-icon";
 import { useSettingsDialog } from "./settings";
 
 function NavMenuButtonContent({
@@ -90,40 +88,20 @@ export function WorkspaceNavMenu() {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <a
-                    href="https://deerflow.tech/"
+                    href="https://arteliers.work"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
                     <DropdownMenuItem>
                       <GlobeIcon />
-                      {t.workspace.officialWebsite}
-                    </DropdownMenuItem>
-                  </a>
-                  <a
-                    href="https://github.com/bytedance/deer-flow"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <DropdownMenuItem>
-                      <GithubIcon />
-                      {t.workspace.visitGithub}
+                      访问 arteliers.work
                     </DropdownMenuItem>
                   </a>
                   <DropdownMenuSeparator />
-                  <a
-                    href="https://github.com/bytedance/deer-flow/issues"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <DropdownMenuItem>
-                      <BugIcon />
-                      {t.workspace.reportIssue}
-                    </DropdownMenuItem>
-                  </a>
-                  <a href="mailto:support@deerflow.tech">
+                  <a href="mailto:eric@arteliers.work">
                     <DropdownMenuItem>
                       <MailIcon />
-                      {t.workspace.contactUs}
+                      联系作者 eric@arteliers.work
                     </DropdownMenuItem>
                   </a>
                 </DropdownMenuGroup>
