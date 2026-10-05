@@ -39,6 +39,28 @@ else
 fi
 
 step "4/9 打开投研台所需的开关，语言设为中文"
+# 研报库默认不进 Git：新下载的项目需要先建好文件夹和一份示例自选股
+mkdir -p market-desk/library/reports market-desk/library/theses
+if [ ! -f market-desk/library/watchlist.yaml ]; then
+  cat > market-desk/library/watchlist.yaml <<'WL'
+# 自选股：每行一只，"- 代码 名称 | 关注理由"。A股 6 位代码，港股 hk00700，指数 sh000300。
+a_shares:
+  - 600519 贵州茅台 | 消费龙头，股息与估值锚
+  - 300750 宁德时代 | 动力电池，出口
+hong_kong:
+  - hk00700 腾讯控股 | 平台，回购
+indices:
+  - sh000001 上证指数 | 大盘
+  - sh000300 沪深300 | 大盘蓝筹
+  - hkHSTECH 恒生科技 | 港股科技
+macro:
+  - USD/CNH | 人民币汇率
+  - CN10Y | 国内利率
+  - Gold | 黄金
+WL
+  ok "已创建研报库和示例自选股（market-desk/library/watchlist.yaml，随时修改）"
+fi
+[ -f market-desk/library/calls.csv ] || printf 'id,created,source,asset,call,prob,resolve_by,status,outcome,resolved,note,lang\n' > market-desk/library/calls.csv
 bash market-desk/desk.sh configure --lang zh | grep -E "^(->|ok|!!)" || true
 
 step "5/9 API 密钥"
